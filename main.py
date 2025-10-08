@@ -1,8 +1,10 @@
 from random import randint
 from time import sleep
 
+# Main class
 class Conway:
     def __init__(self, chunk_width=10, chunk_height=10):
+        # Initiate board full of chunks
         self.board = Board(chunk_width, chunk_height)
         for x in range(-1, 3):
             for y in range(-1, 3):
@@ -13,8 +15,9 @@ class Conway:
         self.board.set_chunk(1, 0,  int_matrix_to_cell_matrix([ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 1, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0], [1, 0, 0, 0, 1, 0, 1, 1, 0, 0], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]))
         self.board.set_chunk(1, 1,  int_matrix_to_cell_matrix([ [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 0, 1, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]))
         self.board.set_chunk(1, 2,  int_matrix_to_cell_matrix([ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]))
-        
+
     def iterate_chunks(self):
+        # check through each chunk and iterate it
         new_chunks = []
         for c in self.board.get_chunks():
             new_chunks.append((c['x'], c['y'], c['chunk'].iterate(self.board)))
@@ -22,6 +25,7 @@ class Conway:
             self.board.set_chunk(c[0], c[1], c[2])
     
     def print_chunks(self):
+        # combine chunks into one for printing
         whole_board = self.board.combine_all_chunks()
         print('┌' + '─' * len(whole_board[0]) * len(Cell.EMPTY)  + '┐')
         for i, row in enumerate(whole_board):
@@ -45,6 +49,7 @@ class Board:
         self.chunks = []
 
     def add_chunk(self, x, y):
+        # create a new chunk at specified coordinates
         self.chunks.append({
             'chunk': Chunk(x, y, Chunk.empty_chunk(self.chunk_width, self.chunk_height)),
             'x': x,
@@ -59,6 +64,7 @@ class Board:
     def get_chunks(self):
         return self.chunks
     def combine_all_chunks(self):
+        # create one big chunk containing all chunks
         min_x, max_x, min_y, max_y = self.get_bounds()
         whole = Chunk.empty_chunk((max_x - min_x + 1) * self.chunk_width, (max_y - min_y + 1) * self.chunk_height)
         for c in self.chunks:
@@ -67,6 +73,7 @@ class Board:
                     whole[(c['x'] - min_x) * self.chunk_width + x][(c['y'] - min_y) * self.chunk_height + y] = c['chunk'].get_cell(x, y)
         return whole
     def get_bounds(self):
+        # get the min and max x and y of a chunk
         # requires chunk at (0, 0)
         min_x, max_x, min_y, max_y = [0]*4
         for c in self.chunks:
@@ -85,6 +92,7 @@ class Chunk:
     B = [3]
     S = [2, 3]
     def __init__(self, x, y, contents=None, width=None, height=None):
+        # initiate chunk
         self.x = x
         self.y = y
         self.width = len(contents)
@@ -103,6 +111,7 @@ class Chunk:
         self.contents = Chunk.random_chunk(self.width, self.height)
     
     def iterate(self, board):
+        # check through each cell of chunk and calculate new states
         new_state = Chunk.empty_chunk(self.width, self.height)
         for x in range(len(self.contents)):
             for y in range(len(self.contents[x])):
@@ -115,7 +124,8 @@ class Chunk:
         return new_state
 
     def get_value(self, x, y, board):
-        # clumsily written but it works
+        # clumsily written but it works, improve in future
+        # gets the value at a particular coordinate, across chunks if necessary
         if x < 0:
             if y < 0:
                 return board.get_chunk_at(self.x - 1, self.y - 1).get_cell(-1, -1)
@@ -136,12 +146,15 @@ class Chunk:
 
     @staticmethod
     def empty_chunk(width, height):
+        # generates an empty chunk
         return [[Cell(0) for i in range(height)] for j in range(width)]
     @staticmethod
     def random_chunk(width, height):
+        # generates a chunk with random cell states
         return [[Cell(randint(0, 1)) for i in range(height)] for j in range(width)]
     @staticmethod
     def neighbour_coords(x, y):
+        # get the coordinates at a neighbouring chunk
         for i in range(-1, 2):
             for j in range(-1, 2):
                 if i == j and i == 0:
